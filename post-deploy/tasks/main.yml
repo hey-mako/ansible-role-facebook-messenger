@@ -1,0 +1,111 @@
+---
+
+- name: Create a test user
+  uri:
+    body: |
+      {
+        "access_token": "{{ access_token }}",
+        "permissions": "{{ test_user.permissions | join(',') }}"
+      }
+    body_format: json
+    headers:
+      Accept: application/json
+    method: POST
+    return_content: yes
+    url: https://graph.facebook.com/{{ version }}/{{ ansible_env.FACEBOOK_APP_ID }}/accounts/test-users
+  register: response
+
+- set_fact:
+    test_user:
+      access_token: "{{ response.json.access_token }}"
+      id: "{{ response.json.id }}"
+      login_url: "{{ response.json.login_url }}"
+  when: response.json is defined
+
+- name: Create an account for the test user
+  uri:
+    body: "{{ page | combine({'access_token': test_user.access_token}) }}"
+    body_format: json
+    headers:
+      Accept: application/json
+    method: POST
+    return_content: yes
+    url: https://graph.facebook.com/{{ version }}/{{ test_user.id }}/accounts
+
+- name: Retrieve the accounts associated with the test user
+  uri:
+    headers:
+      Accept: application/json
+    method: GET
+    return_content: yes
+    url: https://graph.facebook.com/{{ version }}/me/accounts?access_token={{ test_user.access_token }}
+  register: response
+
+- set_fact:
+    page:
+      access_token: "{{ response.json.data[0].access_token }}"
+      id: "{{ response.json.data[0].id }}"
+  when:
+    - response.json is defined
+    - response.json.data is defined
+
+- name: Subscribe the application to real times updates for the test page
+  uri:
+    body: |
+      {
+        "access_token": "{{ page.access_token }}"
+      }
+    body_format: json
+    headers:
+      Accept: application/json
+    method: POST
+    return_content: yes
+    url: https://graph.facebook.com/{{ version }}/{{ page.id }}/subscribed_apps
+  failed_when: not response.json.success
+  register: response
+
+- name: Create a webhook subscription for the application
+  uri:
+    body: "{{ subscription | combine({'access_token': access_token, 'fields': subscription.fields | join(',')}) }}"
+    body_format: json
+    headers:
+      Accept: application/json
+    method: POST
+    return_content: yes
+    url: https://graph.facebook.com/{{ version }}/{{ ansible_env.FACEBOOK_APP_ID }}/subscriptions
+
+- name: Increase the OAuth token lease
+  uri:
+    body: |
+      {
+        "client_id": "{{ ansible_env.FACEBOOK_APP_ID }}",
+        "client_secret": "{{ access_token.split('|')[-1] }}",
+        "fb_exchange_token": "{{ page.access_token }}",
+        "grant_type": "fb_exchange_token"
+      }
+    body_format: json
+    headers:
+      Accept: application/json
+    method: POST
+    return_content: yes
+    url: https://graph.facebook.com/{{ version }}/oauth/access_token
+  register: response
+
+- name: Write the application access token and application verify token to Heroku configuration variables
+  uri:
+    body: |
+      {
+        "ACCESS_TOKEN": "{{ response.json.access_token }}",
+        "VERIFY_TOKEN": "{{ verify_token }}"
+      }
+    body_format: json
+    headers:
+      Accept: application/vnd.heroku+json; version=3
+      Content-Type: application/json
+    method: PATCH
+    return_content: yes
+    url: https://api.heroku.com/apps/{{ heroku_app_name }}/config-vars
+  when: response.json is defined
+
+- debug:
+    msg: "{{ lookup('template', 'output.j2') }}"

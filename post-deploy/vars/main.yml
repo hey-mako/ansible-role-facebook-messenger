@@ -1,0 +1,30 @@
+---
+
+# https://developers.facebook.com/docs/graph-api/reference/page
+page:
+  about: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+  category_enum: PERSONAL_BLOG
+  cover_photo:
+    url: https://bit.ly/2IUzHtC
+  name: Lorem Ipsum
+  picture: https://bit.ly/2IUzHtC
+
+# https://developers.facebook.com/docs/graph-api/reference/v3.0/app/subscriptions
+subscription:
+  callback_url: https://{{ heroku_app_name }}.herokuapp.com/facebook/receive
+  fields:
+    - messages
+    - messaging_optins
+    - messaging_postbacks
+  object: page
+  verify_token: "{{ verify_token }}"
+
+# https://developers.facebook.com/docs/graph-api/reference/v3.0/app/accounts/test-users
+test_user:
+  permissions:
+    - manage_pages
+    - pages_messaging
+    - publish_actions
+    - publish_pages
+
+heroku_app_name: ~
