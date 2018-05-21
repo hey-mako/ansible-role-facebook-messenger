@@ -11,13 +11,15 @@ page:
 
 # https://developers.facebook.com/docs/graph-api/reference/v3.0/app/subscriptions
 subscription:
-  callback_url: https://{{ heroku_app_name }}.herokuapp.com/facebook/receive
+  callback_url: "{{ callback_url }}"
   fields:
     - messages
     - messaging_optins
     - messaging_postbacks
   object: page
   verify_token: "{{ verify_token }}"
+
+callback_url: ~
 
 # https://developers.facebook.com/docs/graph-api/reference/v3.0/app/accounts/test-users
 test_user:

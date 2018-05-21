@@ -1,5 +1,9 @@
 ---
 
+- assert:
+    that:
+      - callback_url is not none
+
 - name: Create a test user
   uri:
     body: |
@@ -73,6 +77,10 @@
     method: POST
     return_content: yes
     url: https://graph.facebook.com/{{ version }}/{{ ansible_env.FACEBOOK_APP_ID }}/subscriptions
+  delay: 10
+  register: response
+  retries: 10
+  until: response.status == 200
 
 - name: Increase the OAuth token lease
   uri:
@@ -105,7 +113,9 @@
     method: PATCH
     return_content: yes
     url: https://api.heroku.com/apps/{{ heroku_app_name }}/config-vars
-  when: response.json is defined
+  when:
+    - response.json is defined
+    - heroku_app_name is not none
 
 - debug:
     msg: "{{ lookup('template', 'output.j2') }}"
