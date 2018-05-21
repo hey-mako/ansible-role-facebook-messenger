@@ -1,0 +1,9 @@
+dependencies: []
+galaxy_info:
+  author: Mako AI
+  galaxy_tags:
+    - facebook-messenger
+    - messenger-bot
+    - messenger-workflow
+  license: MIT
+  min_ansible_version: 2.5.3
