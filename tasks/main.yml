@@ -109,6 +109,7 @@
     body_format: json
     headers:
       Accept: application/vnd.heroku+json; version=3
+      Authorization: Bearer {{ ansible_env.HEROKU_API_KEY }}
       Content-Type: application/json
     method: PATCH
     return_content: yes
