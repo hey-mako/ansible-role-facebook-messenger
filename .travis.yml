@@ -2,5 +2,7 @@ cache: pip
 install:
   - pip install ansible
 language: python
+notifications:
+  webhooks: https://galaxy.ansible.com/api/v1/notifications/
 script:
   - ansible-playbook -i tests/inventory --syntax-check tests/test.yml
