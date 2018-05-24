@@ -1,6 +1,7 @@
 ---
 
-- hosts: localhost
+- connection: local
+  hosts: localhost
   remote_user: root
   roles:
     - messenger-bot-test-pipeline

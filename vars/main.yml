@@ -1,32 +1,23 @@
 ---
 
-# https://developers.facebook.com/docs/graph-api/reference/page
-page:
-  about: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-  category_enum: PERSONAL_BLOG
-  cover_photo:
-    url: https://bit.ly/2IUzHtC
-  name: Lorem Ipsum
-  picture: https://bit.ly/2IUzHtC
+graph_page_about: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+graph_page_category_enum: PERSONAL_BLOG
+graph_page_cover_photo_url: https://bit.ly/2IUzHtC
+graph_page_name: Lorem Ipsum
+graph_page_picture: https://bit.ly/2IUzHtC
 
-# https://developers.facebook.com/docs/graph-api/reference/v3.0/app/subscriptions
-subscription:
-  callback_url: "{{ callback_url }}"
-  fields:
-    - messages
-    - messaging_optins
-    - messaging_postbacks
-  object: page
-  verify_token: "{{ verify_token }}"
+graph_subscription_callback_url: ~
+graph_subscription_fields:
+  - messages
+  - messaging_optins
+  - messaging_postbacks
+graph_subscription_object: page
+graph_subscription_verify_token: "{{ verify_token }}"
 
-callback_url: ~
-
-# https://developers.facebook.com/docs/graph-api/reference/v3.0/app/accounts/test-users
-test_user:
-  permissions:
-    - manage_pages
-    - pages_messaging
-    - publish_actions
-    - publish_pages
+graph_user_permissions:
+  - manage_pages
+  - pages_messaging
+  - publish_actions
+  - publish_pages
 
 heroku_app_name: ~

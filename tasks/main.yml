@@ -2,14 +2,15 @@
 
 - assert:
     that:
-      - callback_url is not none
+      - graph_subscription_callback_url is not none
 
+# https://developers.facebook.com/docs/graph-api/reference/v3.0/app/accounts/test-users#publish
 - name: Create a test user
   uri:
     body: |
       {
         "access_token": "{{ access_token }}",
-        "permissions": "{{ test_user.permissions | join(',') }}"
+        "permissions": "{{ graph_user_permissions | join(',') }}"
       }
     body_format: json
     headers:
@@ -20,29 +21,41 @@
   register: response
 
 - set_fact:
-    test_user:
+    user:
       access_token: "{{ response.json.access_token }}"
       id: "{{ response.json.id }}"
       login_url: "{{ response.json.login_url }}"
   when: response.json is defined
 
+# https://developers.facebook.com/docs/graph-api/reference/user/accounts/#Creating
 - name: Create an account for the test user
   uri:
-    body: "{{ page | combine({'access_token': test_user.access_token}) }}"
+    body: |
+      {
+        "about": "{{ graph_page_about }}",
+        "access_token": "{{ user.access_token }}",
+        "category_enum": "{{ graph_page_category_enum }}",
+        "cover_photo": {
+          "url": "{{ graph_page_cover_photo_url }}"
+        },
+        "name": "{{ graph_page_name }}",
+        "picture": "{{ graph_page_picture }}"
+      }
     body_format: json
     headers:
       Accept: application/json
     method: POST
     return_content: yes
-    url: https://graph.facebook.com/{{ version }}/{{ test_user.id }}/accounts
+    url: https://graph.facebook.com/{{ version }}/{{ user.id }}/accounts
 
+# https://developers.facebook.com/docs/graph-api/reference/v3.0/app/accounts/test-users#read
 - name: Retrieve the accounts associated with the test user
   uri:
     headers:
       Accept: application/json
     method: GET
     return_content: yes
-    url: https://graph.facebook.com/{{ version }}/me/accounts?access_token={{ test_user.access_token }}
+    url: https://graph.facebook.com/{{ version }}/me/accounts?access_token={{ user.access_token }}
   register: response
 
 - set_fact:
@@ -53,6 +66,7 @@
     - response.json is defined
     - response.json.data is defined
 
+# https://developers.facebook.com/docs/graph-api/reference/page/subscribed_apps/#Creating
 - name: Subscribe the application to real times updates for the test page
   uri:
     body: |
@@ -68,9 +82,17 @@
   failed_when: not response.json.success
   register: response
 
+# https://developers.facebook.com/docs/graph-api/reference/v3.0/app/subscriptions#publish
 - name: Create a webhook subscription for the application
   uri:
-    body: "{{ subscription | combine({'access_token': access_token, 'fields': subscription.fields | join(',')}) }}"
+    body: |
+      {
+        "access_token": "{{ access_token }}",
+        "callback_url": "{{ graph_subscription_callback_url }}",
+        "fields": "{{ graph_subscription_fields | join(',') }}",
+        "object": "{{ graph_subscription_object }}",
+        "verify_token": "{{ graph_subscription_verify_token }}"
+      }
     body_format: json
     headers:
       Accept: application/json
@@ -82,6 +104,7 @@
   retries: 10
   until: response.status == 200
 
+# https://developers.facebook.com/docs/facebook-login/access-tokens/
 - name: Increase the OAuth token lease
   uri:
     body: |
@@ -99,6 +122,7 @@
     url: https://graph.facebook.com/{{ version }}/oauth/access_token
   register: response
 
+# https://devcenter.heroku.com/articles/platform-api-reference#config-vars-update
 - name: Write the application access token and application verify token to Heroku configuration variables
   uri:
     body: |
@@ -116,6 +140,7 @@
     url: https://api.heroku.com/apps/{{ heroku_app_name }}/config-vars
   when:
     - response.json is defined
+    - ansible_env.HEROKU_API_KEY is not none
     - heroku_app_name is not none
 
 - debug:
