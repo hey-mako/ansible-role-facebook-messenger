@@ -4,4 +4,4 @@
   hosts: localhost
   remote_user: root
   roles:
-    - messenger-bot-test-pipeline
+    - ansible-role-facebook-messenger
