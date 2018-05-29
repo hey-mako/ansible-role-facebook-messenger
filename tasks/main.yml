@@ -123,6 +123,11 @@
     url: https://graph.facebook.com/{{ graph_version }}/oauth/access_token
   register: response
 
+- set_fact:
+    cacheable: yes
+    user: "{{ user | combine({'access_token': response.json.access_token}, recursive=True) }}"
+  when: response.json is defined
+
 - debug:
     msg: "{{ lookup('template', 'output.j2') }}"
 
