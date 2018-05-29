@@ -12,12 +12,9 @@ graph_subscription_fields:
   - messaging_optins
   - messaging_postbacks
 graph_subscription_object: page
-graph_subscription_verify_token: "{{ verify_token }}"
 
 graph_user_permissions:
   - manage_pages
   - pages_messaging
   - publish_actions
   - publish_pages
-
-heroku_app_name: ~

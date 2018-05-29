@@ -1,6 +1,7 @@
 ---
 
 - connection: local
+  gather_facts: yes
   hosts: localhost
   remote_user: root
   roles:

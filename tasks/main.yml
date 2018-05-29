@@ -9,7 +9,7 @@
   uri:
     body: |
       {
-        "access_token": "{{ access_token }}",
+        "access_token": "{{ graph_access_token }}",
         "permissions": "{{ graph_user_permissions | join(',') }}"
       }
     body_format: json
@@ -17,10 +17,11 @@
       Accept: application/json
     method: POST
     return_content: yes
-    url: https://graph.facebook.com/{{ version }}/{{ ansible_env.FACEBOOK_APP_ID }}/accounts/test-users
+    url: https://graph.facebook.com/{{ graph_version }}/{{ ansible_env.FACEBOOK_APP_ID }}/accounts/test-users
   register: response
 
 - set_fact:
+    cacheable: yes
     user:
       access_token: "{{ response.json.access_token }}"
       id: "{{ response.json.id }}"
@@ -46,7 +47,7 @@
       Accept: application/json
     method: POST
     return_content: yes
-    url: https://graph.facebook.com/{{ version }}/{{ user.id }}/accounts
+    url: https://graph.facebook.com/{{ graph_version }}/{{ user.id }}/accounts
 
 # https://developers.facebook.com/docs/graph-api/reference/v3.0/app/accounts/test-users#read
 - name: Retrieve the accounts associated with the test user
@@ -55,7 +56,7 @@
       Accept: application/json
     method: GET
     return_content: yes
-    url: https://graph.facebook.com/{{ version }}/me/accounts?access_token={{ user.access_token }}
+    url: https://graph.facebook.com/{{ graph_version }}/me/accounts?access_token={{ user.access_token }}
   register: response
 
 - set_fact:
@@ -78,7 +79,7 @@
       Accept: application/json
     method: POST
     return_content: yes
-    url: https://graph.facebook.com/{{ version }}/{{ page.id }}/subscribed_apps
+    url: https://graph.facebook.com/{{ graph_version }}/{{ page.id }}/subscribed_apps
   failed_when: not response.json.success
   register: response
 
@@ -87,18 +88,18 @@
   uri:
     body: |
       {
-        "access_token": "{{ access_token }}",
+        "access_token": "{{ graph_access_token }}",
         "callback_url": "{{ graph_subscription_callback_url }}",
         "fields": "{{ graph_subscription_fields | join(',') }}",
         "object": "{{ graph_subscription_object }}",
-        "verify_token": "{{ graph_subscription_verify_token }}"
+        "verify_token": "{{ graph_verify_token }}"
       }
     body_format: json
     headers:
       Accept: application/json
     method: POST
     return_content: yes
-    url: https://graph.facebook.com/{{ version }}/{{ ansible_env.FACEBOOK_APP_ID }}/subscriptions
+    url: https://graph.facebook.com/{{ graph_version }}/{{ ansible_env.FACEBOOK_APP_ID }}/subscriptions
   delay: 10
   register: response
   retries: 10
@@ -110,7 +111,7 @@
     body: |
       {
         "client_id": "{{ ansible_env.FACEBOOK_APP_ID }}",
-        "client_secret": "{{ access_token.split('|')[-1] }}",
+        "client_secret": "{{ graph_access_token.split('|')[-1] }}",
         "fb_exchange_token": "{{ page.access_token }}",
         "grant_type": "fb_exchange_token"
       }
@@ -119,29 +120,24 @@
       Accept: application/json
     method: POST
     return_content: yes
-    url: https://graph.facebook.com/{{ version }}/oauth/access_token
+    url: https://graph.facebook.com/{{ graph_version }}/oauth/access_token
   register: response
-
-# https://devcenter.heroku.com/articles/platform-api-reference#config-vars-update
-- name: Write the application access token and application verify token to Heroku configuration variables
-  uri:
-    body: |
-      {
-        "ACCESS_TOKEN": "{{ response.json.access_token }}",
-        "VERIFY_TOKEN": "{{ verify_token }}"
-      }
-    body_format: json
-    headers:
-      Accept: application/vnd.heroku+json; version=3
-      Authorization: Bearer {{ ansible_env.HEROKU_API_KEY }}
-      Content-Type: application/json
-    method: PATCH
-    return_content: yes
-    url: https://api.heroku.com/apps/{{ heroku_app_name }}/config-vars
-  when:
-    - response.json is defined
-    - ansible_env.HEROKU_API_KEY is not none
-    - heroku_app_name is not none
 
 - debug:
     msg: "{{ lookup('template', 'output.j2') }}"
+
+  # Prevent these tasks from running unless explicitly requested.
+- name: Destroy the test user
+  uri:
+    body: |
+     {
+      "access_token": "{{ graph_access_token }}"
+     }
+    body_format: json
+    headers:
+      Accept: application/json
+    method: DELETE
+    url: https://graph.facebook.com/{{ graph_version }}/{{ user.id }}
+  tags:
+    - destroy
+    - never

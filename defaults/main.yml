@@ -1,6 +1,6 @@
 ---
 
-access_token: "{{ [ansible_env.FACEBOOK_APP_ID, ansible_env.FACEBOOK_APP_SECRET] | join('|') }}"
+graph_access_token: "{{ [ansible_env.FACEBOOK_APP_ID, ansible_env.FACEBOOK_APP_SECRET] | join('|') }}"
 # Changing the value of this token is permitted.
-verify_token: my-token
-version: v2.12
+graph_verify_token: my-token
+graph_version: v2.12
