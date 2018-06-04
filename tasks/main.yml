@@ -92,7 +92,7 @@
         "callback_url": "{{ graph_subscription_callback_url }}",
         "fields": "{{ graph_subscription_fields | join(',') }}",
         "object": "{{ graph_subscription_object }}",
-        "verify_token": "{{ graph_verify_token }}"
+        "verify_token": "{{ ansible_env.VERIFY_TOKEN }}"
       }
     body_format: json
     headers:
