@@ -1,6 +1,6 @@
 > Ansible role for creating Facebook test users to test Messenger bots.
 
-[![Build Status](https://travis-ci.com/mako-ai/ansible-role-facebook-messenger.svg?branch=master)](https://travis-ci.com/mako-ai/ansible-role-facebook-messenger)
+[![Build Status](https://travis-ci.com/hey-mako/ansible-role-facebook-messenger.svg?branch=master)](https://travis-ci.com/hey-mako/ansible-role-facebook-messenger)
 
 ## Contents
 
